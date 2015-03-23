@@ -1,0 +1,48 @@
+#!/bin/bash
+
+usage(){
+cat << EOF
+OPTIONS:
+  -h    show this message
+  -f    input file
+  -b    beginning time in format hh:mm:ss[:...]
+  -e    end time in format hh:mm:ss[:...]
+  -o    output name
+EOF
+}
+
+while getopts "f:b:e:o:h" opt; do
+    case "$opt" in
+    f)
+        filename="$OPTARG"
+        ;;
+    b)
+        starttime="$OPTARG"
+        ;;
+    e)
+        endtime="$OPTARG"
+        ;;
+    o)
+        outputname="$OPTARG"
+        ;;
+    h)
+        usage
+        exit
+    esac
+done
+
+if [[ -z $filename ]] || [[ -z $starttime ]] || [[ -z $endtime ]] || [[ -z $outputname ]]
+then
+    usage
+    exit
+fi
+
+
+tmpfile="/tmp/towebm.mkv"
+endname="/home/$(whoami)/clips/$outputname"
+
+ffmpeg -ss -i "$filename" -sn -ss "$starttime" -to "$endtime" "$tmpfile"
+
+ffmpeg -i "$tmpfile" -vf scale=-1:720 -c:v libvpx -crf 4 -b:v 1M -c:a libvorbis "$endname"
+
+rm $tmpfile

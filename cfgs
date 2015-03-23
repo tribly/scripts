@@ -1,0 +1,11 @@
+#!/bin/bash
+
+dir="/home/$(whoami)/configs"
+
+for x in $dir/*; do
+    cd "$x"
+    if [[ -n $(git status -s) ]]; then
+        notify-send "uncommited in $(pwd)"
+    fi
+    cd ..
+done

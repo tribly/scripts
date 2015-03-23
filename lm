@@ -1,0 +1,4 @@
+#!/bin/bash
+
+latexmk -pdf -shell-escape $1
+latexmk -c

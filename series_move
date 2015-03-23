@@ -1,0 +1,11 @@
+#!/bin/bash
+
+destination="/mnt/data/series/"
+sourcef="/home/$(whoami)/torrents/"
+expression="{n.space('_').lower()}/season_{s}/{n.space('_').lower()}_{s00e00}_{t.space('_').lower()}"
+
+filebot -rename \
+    --db TheTVDB \
+    -r \
+    -non-strict \
+    --format "$destination$expression" $sourcef

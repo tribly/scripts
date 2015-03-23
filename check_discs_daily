@@ -1,0 +1,11 @@
+#!/bin/bash
+
+smartctl -t short /dev/sda > /dev/null
+smartctl -t short /dev/sdb > /dev/null
+smartctl -t short /dev/sdb > /dev/null
+
+sleep 5m
+
+smartctl -H /dev/sda
+smartctl -H /dev/sdb
+smartctl -H /dev/sdc
