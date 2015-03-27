@@ -11,7 +11,9 @@ OPTIONS:
 EOF
 }
 
-while getopts "f:b:e:o:h" opt; do
+noaudio=""
+
+while getopts "f:b:e:o:ah" opt; do
     case "$opt" in
     f)
         filename="$OPTARG"
@@ -24,6 +26,9 @@ while getopts "f:b:e:o:h" opt; do
         ;;
     o)
         outputname="$OPTARG"
+        ;;
+    a)
+        noaudio="-an"
         ;;
     h)
         usage
@@ -41,7 +46,7 @@ fi
 tmpfile="/tmp/towebm.mkv"
 endname="/home/$(whoami)/clips/$outputname"
 
-ffmpeg -ss -i "$filename" -sn -ss "$starttime" -to "$endtime" "$tmpfile"
+ffmpeg -i "$filename" $noaudio -sn -ss "$starttime" -to "$endtime" "$tmpfile"
 
 ffmpeg -i "$tmpfile" -vf scale=-1:720 -c:v libvpx -crf 4 -b:v 1M -c:a libvorbis "$endname"
 

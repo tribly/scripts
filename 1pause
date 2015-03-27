@@ -1,6 +1,7 @@
 #!/bin/bash
 
 while true; do
+
     sleep 60m
     notify-send 'pause'
     sleep 10m
