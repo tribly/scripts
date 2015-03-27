@@ -7,6 +7,7 @@ OPTIONS:
   -f    input file
   -b    beginning time in format hh:mm:ss[:...]
   -e    end time in format hh:mm:ss[:...]
+  -a    disable audio
   -o    output name
 EOF
 }
