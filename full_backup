@@ -1,0 +1,57 @@
+#!/bin/bash
+
+checkForDrive() {
+    drive="/mnt/backup"
+
+    if ! grep -qs $drive /proc/mounts
+    then
+        notify-send "Mount drive for backup!"
+    else
+        return
+    fi
+
+    for i in $(seq 1 10)
+    do
+        if ! grep -qs $drive /proc/mounts
+        then
+            :
+        else
+            return
+        fi
+
+        sleep 5m
+    done
+}
+
+backup() {
+    checkForDrive
+    exit
+
+    src=$1
+    dest=$2
+    PASSPHRASE=$(gpg -dq /home/$(whoami)/personal/backup_pw.gpg)
+    export PASSPHRASE
+    duplicity \
+        --exclude /dev/ \
+        --exclude /proc/ \
+        --exclude /sys/ \
+        --exclude /tmp/ \
+        --exclude /run/ \
+        --exclude /mnt/ \
+        --exclude /media/ \
+        --exclude /lost+found/ \
+        --exclude /home/ \
+        --volsize 50 \
+        --allow-source-mismatch \
+        --asynchronous-upload \
+        --encrypt-key "0x7BF2192978A06838" \
+        --gpg-options --batch \
+        --gpg-options --pinentry-model=loopback \
+        --full-if-older-than 30D \
+        "$src" "$dest"
+
+    duplicity --force remove-older-than 120D "$dest"
+    export PASSPHRASE=""
+}
+
+backup / file:///mnt/backup/full_backup
