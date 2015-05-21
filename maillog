@@ -1,14 +1,14 @@
 #!/bin/bash
-FROM="dick@bu.tt"
+FROM="dick@butt"
 SUBJECT="Test email"
-MAILTO="dick@bu.tt"
+MAILTO="dick@butt"
 BOUNDARY="kjsahj4h2kahskahj2.3kahfah"
 # we need two different boundaries: one for an encrypted mail, one for the original
 ENCBOUNDARY="hfgkhg3k4hyj4hjk2h2kj2"
 BODY="$1"
 ATTACHMENT="$2"
 # GPG key to use
-KEY="yourkey"
+KEY="0xA03A50C0C71BE6BE"
 
 generate_plain_headers() {
 printf '%s\n' "FROM: $FROM
@@ -48,13 +48,15 @@ $BODY
 "
 
 # Find out mime type of our file
+if [[ ! -z "$ATTACHMENT" ]]; then
 MIMETYPE=$(file --mime-type "$ATTACHMENT" | cut -d ' ' -f2)
 printf '%s\n' "--${BOUNDARY}
 Content-Type: $MIMETYPE
 Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename=\"$ATTACHMENT\"
+Content-Disposition: attachment; filename=\"${ATTACHMENT##*/}\"
 "
         base64 "$ATTACHMENT"
+fi
 
 printf '%s\n' "--${BOUNDARY}--"
 }
