@@ -1,15 +1,14 @@
 #!/bin/bash
-
-FROM="di@ck.butt"
+FROM="dick@bu.tt"
 SUBJECT="Test email"
-MAILTO="di@ck.butt"
+MAILTO="dick@bu.tt"
 BOUNDARY="kjsahj4h2kahskahj2.3kahfah"
 # we need two different boundaries: one for an encrypted mail, one for the original
 ENCBOUNDARY="hfgkhg3k4hyj4hjk2h2kj2"
 BODY="$1"
 ATTACHMENT="$2"
 # GPG key to use
-KEY="0xA03A50C0C71BE6BE"
+KEY="yourkey"
 
 generate_plain_headers() {
 printf '%s\n' "FROM: $FROM
