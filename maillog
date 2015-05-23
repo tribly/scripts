@@ -1,12 +1,12 @@
 #!/bin/bash
-FROM="dick@butt"
-SUBJECT="Test email"
-MAILTO="dick@butt"
+FROM="$1"
+SUBJECT="$2"
+MAILTO="$3"
 BOUNDARY="kjsahj4h2kahskahj2.3kahfah"
 # we need two different boundaries: one for an encrypted mail, one for the original
 ENCBOUNDARY="hfgkhg3k4hyj4hjk2h2kj2"
-BODY="$1"
-ATTACHMENT="$2"
+BODY="$4"
+ATTACHMENT="$5"
 # GPG key to use
 KEY="0xA03A50C0C71BE6BE"
 
