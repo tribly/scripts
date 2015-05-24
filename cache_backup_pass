@@ -1,0 +1,6 @@
+#!/bin/bash
+sleep 1m
+f=$(mktemp)
+echo "la" | gpg --yes -q -e -r 0x7BF2192978A06838 -o $f
+gpg -d -q $f > /dev/null
+rm $f
