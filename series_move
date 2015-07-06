@@ -8,4 +8,6 @@ filebot -rename \
     --db TheTVDB \
     -r \
     -non-strict \
-    --format "$destination$expression" $sourcef
+    --format "$destination$expression" $sourcef | sponge /tmp/series_move.log
+
+sed 's/\[MOVE\] Rename \[\/home\/heinz\/torrents\//\n/' /tmp/series_move.log | sed 's/ to /\n/' | sed 's/\[\/mnt\/data\///'

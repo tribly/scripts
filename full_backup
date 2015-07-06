@@ -1,11 +1,14 @@
 #!/bin/bash
 
+user="heinz"
+
 checkForDrive() {
     drive="/mnt/backup"
 
     if ! grep -qs $drive /proc/mounts
     then
-        notify-send "Mount drive for backup!"
+        #su -s /bin/bash $user -c "notify-send" "Mount drive for backup!"
+        echo
     else
         return
     fi
@@ -25,12 +28,14 @@ checkForDrive() {
 
 backup() {
     checkForDrive
-    exit
+    cp -r /home/heinz/.gnupg /root/
+    chown -R root:root /root/.gnupg
 
     src=$1
     dest=$2
-    PASSPHRASE=$(gpg -dq /home/$(whoami)/personal/backup_pw.gpg)
+    PASSPHRASE=$(gpg -d /home/heinz/personal/backup_pw.gpg)
     export PASSPHRASE
+    #su -s /bin/bash $user -c "notify-send" "Starting backup"
     duplicity \
         --exclude /dev/ \
         --exclude /proc/ \
@@ -40,18 +45,32 @@ backup() {
         --exclude /mnt/ \
         --exclude /media/ \
         --exclude /lost+found/ \
-        --exclude /home/ \
+        --exclude /home/$user/torrents \
+        --exclude /home/$user/aur \
+        --exclude /home/$user/games \
+        --exclude /home/$user/.incomplete_torrents \
+        --exclude /home/$user/.local/share/Steam \
         --volsize 50 \
         --allow-source-mismatch \
-        --asynchronous-upload \
         --encrypt-key "0x7BF2192978A06838" \
         --gpg-options --batch \
-        --gpg-options --pinentry-model=loopback \
+        --gpg-options --pinentry-mode=loopback \
+        --asynchronous-upload \
         --full-if-older-than 30D \
         "$src" "$dest"
 
     duplicity --force remove-older-than 120D "$dest"
     export PASSPHRASE=""
+    rm -r /root/.gnupg
+    #su -s /bin/bash $user -c "notify-send" "Backup complete"
 }
 
-backup / file:///mnt/backup/full_backup
+log=$(mktemp)
+
+backup / file:///mnt/backup/full_backup #| gpg -e --yes --no-tty --batch -r 0xA03A50C0C71BE6BE --quiet -a -o $log
+#/home/$user/scripts/maillog "daemon@keks" \
+                            #"full-backup log" \
+                            #"daemon@tribly.de" \
+                            #"" \
+                            #"$log"
+#rm $log

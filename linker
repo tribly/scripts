@@ -1,9 +1,0 @@
-#!/bin/bash
-
-reg="youtube.com"
-
-if [[ $1 =~ $reg ]]; then
-    mpv $1
-else
-    chromium $1
-fi
