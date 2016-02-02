@@ -1,1 +1,1 @@
-nice -20 chromium --disk-cache-dir=/tmp/cache
+chromium --disk-cache-dir=/tmp/cache
