@@ -1,0 +1,6 @@
+#!/bin/bash
+
+if [ $# -gt 1 ]; then
+    fb -m $@
+fi
+notify-send "Pictures uploaded"
