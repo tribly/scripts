@@ -1,0 +1,70 @@
+#!/bin/bash
+
+function lineout() {
+    for ((i=0; i<${#NAMES[@]}; i++)); do
+        case ${NAMES[$i]} in
+            "dota2")
+                pactl set-sink-input-volume ${SINKS[$i]} 100%
+                ;;
+            "TeamSpeak3")
+                # Make it bearly hearable
+                pactl set-sink-input-volume ${SINKS[$i]} 75%
+                # Mute the Mic
+                #pactl set-source-mute alsa_input.pci-0000_00_1b.0.analog-stereo toggle
+                ;;
+            "Spotify")
+                pactl set-sink-input-volume ${SINKS[$i]} 75%
+                ;;
+            *)
+                ;;
+            esac
+    done
+}
+
+function headphones() {
+    for ((i=0; i<${#NAMES[@]}; i++)); do
+        case ${NAMES[$i]} in
+            "dota2")
+                pactl set-sink-input-volume ${SINKS[$i]} 50%
+                ;;
+            "TeamSpeak3")
+                pactl set-sink-input-volume ${SINKS[$i]} 100%
+                ;;
+            "Spotify")
+                pactl set-sink-input-volume ${SINKS[$i]} 25%
+                ;;
+            *)
+                ;;
+            esac
+    done
+}
+
+function get_names() {
+    while read -r line; do
+        NAMES+=($(echo "$line" | awk '{ print $3 }'))
+    done < <(pactl list sink-inputs | ag 'application.name = ' | sed 's/"//g')
+}
+
+function get_sinks() {
+    while read -r line; do
+        SINKS+=($(echo "$line"))
+    done < <(pactl list sink-inputs short | cut -f1)
+}
+
+while true; do
+    SINK=$(pacmd list-sinks | ag 'active port: <analog-output-' | awk '{ print $3 }')
+    NAMES=()
+    SINKS=()
+
+    get_names
+    get_sinks
+
+    if [ "$SINK" = "<analog-output-lineout>" ]; then
+        lineout
+    elif [ "$SINK" = "<analog-output-headphones>" ]; then
+        headphones
+    fi
+
+    sleep 1
+done
+
