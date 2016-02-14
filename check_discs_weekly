@@ -2,7 +2,7 @@
 
 smartctl -t long /dev/sda > /dev/null
 smartctl -t long /dev/sdb > /dev/null
-smartctl -t long /dev/sdb > /dev/null
+smartctl -t long /dev/sdc > /dev/null
 
 sleep 300m
 

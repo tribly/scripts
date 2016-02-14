@@ -1,0 +1,12 @@
+#!/bin/bash
+
+DIR="/home/$(whoami)/blog"
+
+if [ "$PWD" != "$DIR" ]; then
+    cd $DIR
+fi
+
+jekyll build
+
+rsync --human-readable -a --info=progress2 --partial \
+    _site/ uberspace:blog
