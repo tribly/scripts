@@ -6,6 +6,36 @@ if [ "$PWD" != "$DIR" ]; then
     cd $DIR
 fi
 
+###
+# Check if we have something new to push
+###
+if [ -z $(git status --porcelain) ]; then
+    echo "Nothing new, exiting"
+    exit
+fi
+###
+# Check if we have drafts left we forgot to publish
+###
+if [ "$(ls -A _drafts)" ]
+then
+    got_drafts=true
+else
+    got_drafts=false
+fi
+
+if $got_drafts; then
+    echo "Found drafts"
+
+    for x in _drafts/*
+    do
+        echo -n "Want to publish $(basename $x)? [y/n]: "
+        read choice
+        if [ $choice == "y" ]; then
+            mv "$x" _posts
+        fi
+    done
+fi
+
 jekyll build
 
 rsync --human-readable -a --info=progress2 --partial \
