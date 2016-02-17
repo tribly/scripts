@@ -7,12 +7,13 @@ if [ "$PWD" != "$DIR" ]; then
 fi
 
 ###
-# Check if we have something new to push
+# Check if we have uncommit stuff
 ###
-if [ -z $(git status --porcelain) ]; then
-    echo "Nothing new, exiting"
+if [ $(git status --porcelain) ]; then
+    echo "Uncommited stuff, exiting."
     exit
 fi
+
 ###
 # Check if we have drafts left we forgot to publish
 ###
