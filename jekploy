@@ -15,6 +15,18 @@ if [ $(git status --porcelain) ]; then
 fi
 
 ###
+# Check if we have unpushed stuff
+###
+if [ "$(git log --pretty=oneline origin/master..master)" ]; then
+    git log --pretty="format:%p %s" origin/master..master
+    echo "Unpushed commits. Push them? [y/n] "
+    read choice
+    if [ $choice == "y" ]; then
+        git push origin master
+    fi
+fi
+
+###
 # Check if we have drafts left we forgot to publish
 ###
 if [ "$(ls -A _drafts)" ]
