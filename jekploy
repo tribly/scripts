@@ -19,7 +19,7 @@ fi
 ###
 if [ "$(git log --pretty=oneline origin/master..master)" ]; then
     git log --pretty="format:%p %s" origin/master..master
-    echo "Unpushed commits. Push them? [y/n] "
+    echo -n "Unpushed commits. Push them? [y/n] "
     read choice
     if [ $choice == "y" ]; then
         git push origin master
