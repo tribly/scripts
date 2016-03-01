@@ -1,15 +1,16 @@
 #!/bin/bash
 
-DIR="/home/$(whoami)/blog"
+dir="/home/$(whoami)/blog"
+push=""
 
-if [ "$PWD" != "$DIR" ]; then
-    cd $DIR
+if [ "$PWD" != "$dir" ]; then
+    cd $dir
 fi
 
 ###
 # Check if we have uncommit stuff
 ###
-if [ $(git status --porcelain) ]; then
+if [ "$(git status --porcelain)" ]; then
     echo "Uncommited stuff, exiting."
     exit
 fi
@@ -20,10 +21,7 @@ fi
 if [ "$(git log --pretty=oneline origin/master..master)" ]; then
     git log --pretty="format:%p %s" origin/master..master
     echo -n "Unpushed commits. Push them? [y/n] "
-    read choice
-    if [ $choice == "y" ]; then
-        git push origin master
-    fi
+    read push
 fi
 
 ###
@@ -46,6 +44,10 @@ if $got_drafts; then
         if [ $choice == "y" ]; then
             mv "$x" _posts
         fi
+    # Push, after we published the post
+    if [ $push == "y" ]; then
+        git push origin master
+    fi
     done
 fi
 
