@@ -42,16 +42,29 @@ if $got_drafts; then
         echo -n "Want to publish $(basename $x)? [y/n]: "
         read choice
         if [ $choice == "y" ]; then
+            echo "--------------------"
+            echo "Publishing posts"
+            echo "--------------------"
             mv "$x" _posts
         fi
-    # Push, after we published the post
-    if [ $push == "y" ]; then
-        git push origin master
-    fi
     done
 fi
 
+# Push, after we published the post
+if [ $push == "y" ]; then
+    echo "--------------------"
+    echo "Pushing to repo"
+    echo "--------------------"
+    git push origin master
+fi
+
+echo "--------------------"
+echo "Building site"
+echo "--------------------"
 jekyll build
 
+echo "--------------------"
+echo "Pushing the changes"
+echo "--------------------"
 rsync --human-readable -a --info=progress2 --partial \
     _site/ uberspace:blog
