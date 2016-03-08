@@ -4,7 +4,7 @@ function lineout() {
     for ((i=0; i<${#NAMES[@]}; i++)); do
         case ${NAMES[$i]} in
             "dota2")
-                pactl set-sink-input-volume ${SINKS[$i]} 100%
+                pactl set-sink-input-volume ${SINKS[$i]} 75%
                 ;;
             "TeamSpeak3")
                 # Make it bearly hearable
