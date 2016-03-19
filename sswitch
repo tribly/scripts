@@ -13,7 +13,7 @@ function lineout() {
                 pactl set-source-mute alsa_input.pci-0000_00_1b.0.analog-stereo true
                 ;;
             "Spotify")
-                pactl set-sink-input-volume ${SINKS[$i]} 75%
+                pactl set-sink-input-volume ${SINKS[$i]} 50%
                 ;;
             *)
                 ;;

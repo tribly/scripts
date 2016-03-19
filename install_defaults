@@ -1,0 +1,93 @@
+#!/bin/bash
+
+function cmnt {
+    echo
+    echo "#################################"
+    echo "### $1"
+    echo "#################################"
+    echo
+}
+
+function check_install {
+    if pacman -Qi "$1" > /dev/null 2>&1; then
+        echo "$1 already installed"
+    else
+        sudo pacman -S "$1"
+    fi
+}
+
+##################################
+cmnt "Installing packages"
+
+check_install "openssh"
+check_install "gvim"
+check_install "zsh"
+check_install "git"
+check_install "powerline-vim"
+check_install "mosh"
+check_install "the_silver_searcher"
+
+# Server stuff
+check_install "letsencrypt-apache"
+check_install "weechat"
+check_install "tmux"
+check_install "rsync"
+
+cmnt "Done"
+
+##################################
+cmnt "Creating configs dir"
+
+if [ ! -d ~/configs ]; then
+    mkdir ~/configs
+fi
+
+cmnt "Done"
+
+##################################
+
+cmnt "Getting configs"
+
+cd ~/configs
+git clone http://git.tribly.de/zsh/
+git clone http://git.tribly.de/vim/
+git clone https://github.com/tribly/powerline
+cmnt "Done"
+
+##################################
+
+cmnt "Updating vim submodules"
+
+cd ~/configs/vim
+git submodule update --init --recursive
+
+cmnt "Done"
+
+##################################
+
+cmnt "Linking configs"
+
+cd ~/
+ln -s ~/configs/zsh/zshrc ~/.zshrc
+ln -s ~/configs/zsh/ ~/.zsh
+
+ln -s ~/configs/vim/vimrc ~/.vimrc
+ln -s ~/configs/vim/vim ~/.vim
+
+if [ ! -d ~/.config ]; then
+    mkdir ~/.config
+fi
+
+ln -s ~/configs/powerline ~/.config/powerline
+
+
+cmnt "Done"
+
+##################################
+
+cmnt "Removing non-server stuff from zsh"
+
+sed -i '/private/d' ~/configs/zsh/zshrc
+sed -i '/fpath/d' ~/configs/zsh/zshrc
+sed -i '/fpath/d' ~/configs/zsh/zshrc
+sed -i '/PATH/d' ~/configs/zsh/exports.zsh
