@@ -1,6 +1,6 @@
 #!/bin/bash
 
-destination="/mnt/data/movies/"
+destination="/mnt/grab/movies/"
 sourcef="/home/$(whoami)/torrents/"
 expression="{n.space('_').lower()}/{n.space('_').lower()}"
 

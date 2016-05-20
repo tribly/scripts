@@ -1,0 +1,125 @@
+#!/bin/bash
+
+main() {
+    # The drive to backup to
+    BKP_MNT=/mnt/backup
+    # The directory to store backups in
+    REPO=/mnt/backup/home_backups
+    # Name of the archive, duh
+    ARCHIVE_NAME=$(date +%d-%m-%Y_%H:%M:%S)
+    # UUID of the drive to mount
+    UUID="57887ad0-59e4-493a-9f4d-d7d89e1c7743"
+    LOG_FILE=$(mktemp)
+
+    trap cleanUp EXIT TERM
+
+    checkForDrive $UUID
+
+	notify-send "starting backup"
+    backup $REPO $ARCHIVE_NAME 2>&1 | \
+        gpg --yes -e --no-tty --batch -r 0xA03A50C0C71BE6BE --quiet -a -o $LOG_FILE
+
+    /home/heinz/scripts/maillog "daemon@keks" \
+                                "home-backup log" \
+                                "daemon@tribly.de" \
+                                "" \
+                                "$LOG_FILE"
+
+    notify-send "backup complete"
+}
+
+cleanUp() {
+    rm -rf $LOG_FILE
+
+    # Check if drive is mounted and unmount it
+    if lsblk | ag $BKP_MNT > /dev/null; then
+        umount $BKP_MNT
+    fi
+}
+
+checkForDrive() {
+    local connected=false
+
+    # Check if the backup-drive is connected/turned on
+    for x in $(lsblk --output UUID); do
+        if [ "$x" == "$1" ]; then
+            connected=true
+        else
+            :
+        fi
+    done
+
+    # If it is connected mount it
+    if [ "$connected" == "false" ]; then
+        notify-send "Turn on backup"
+    else
+        if lsblk | ag $BKP_MNT > /dev/null; then
+            # Do nothing, it's mounted
+            :
+        else
+            mount $BKP_MNT
+        fi
+
+        return
+    fi
+
+
+    # Else, check every 5 min if the drive is turned on
+    for i in $(seq 1 11); do
+        for x in $(lsblk --output UUID); do
+            if [ "$x" != "$1" ]; then
+                :
+            else
+                connected=true
+                break 2
+            fi
+        done
+        sleep 5m
+    done
+
+    if [ "$connected" == "false" ]; then
+        exit
+    else
+        return
+    fi
+}
+
+backup() {
+    local REPO=$1
+    local ARCHIVE_NAME=$2
+	local BORG_PASSPHRASE=$(pass storage/keks-backup)
+
+	export BORG_PASSPHRASE
+
+    local -a excludeDirs=(
+            --exclude /home/$(whoami)/torrents
+            --exclude /home/$(whoami)/.local
+            --exclude /home/$(whoami)/.cache
+            --exclude /home/$(whoami)/aur
+            --exclude /home/$(whoami)/games
+            --exclude /home/$(whoami)/downloads
+            --exclude /home/$(whoami)/matlab
+            --exclude /home/$(whoami)/.incomplete_torrents
+            --exclude /home/lost+found
+    )
+
+    local -a options=(
+            --verbose
+            --stats
+    )
+
+    borg create \
+        "${options[@]}" \
+        $REPO::$ARCHIVE_NAME \
+        /home \
+        "${excludeDirs[@]}"
+
+    # Keep Backups up to 6 months old
+    borg prune \
+        --keep-within=6m \
+        $REPO
+
+    unset BORG_PASSPHRASE
+}
+
+main
