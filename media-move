@@ -1,0 +1,126 @@
+#!/bin/bash
+
+DESTINATION="/mnt/grab/"
+LOGFILE="$(mktemp)"
+DO_MOVE=false
+
+declare -a FILES
+declare -A EXPRESSIONS=(["series"]="{n.space('_').lower()}/season_{s}/{fn.space('_')}" \
+                        ["movies"]="{n.space('_').lower()}/{fn.space('_')}")
+
+function main() {
+    cleanUp
+
+    for param in "$@"; do
+        case "$param" in
+            -y | --yes)
+                DO_MOVE=true
+                shift
+                ;;
+            -m | --movie)
+                if [ "$MODE" == "series" ]; then
+                    echo "Movies or series? You can't do both!"
+                    exit
+                fi
+                db="TheMovieDB"
+                mode="movies"
+                shift
+                ;;
+            -s | --series)
+                if [ "$MODE" == "movie" ]; then
+                    echo "Movies or series? You can't do both!"
+                    exit
+                fi
+                db="TheTVDB"
+                mode="series"
+                shift
+                ;;
+            -h | --help)
+                usage
+                exit
+                ;;
+            *)
+                FILES+=("$param")
+                shift
+                ;;
+        esac
+    done
+
+    if [ -z "$mode" ]; then
+        echo "Select -m or -s"
+        echo "Exiting..."
+        exit
+    fi
+
+    if "$DO_MOVE"; then
+        moveIt "move" "$db" "$mode" "${FILES[@]}"
+    else
+        moveIt "test" "$db" "$mode" "${FILES[@]}"
+    fi
+
+    generateHTML "$mode"
+}
+
+function usage() {
+    cat << EOF
+usage: $(basename "$0") [param] <files>
+
+Options:
+    -y, --yes        Default is in testmode. Use -y to confirm the copy.
+    -m, --movie      Movie mode. Does not work with -s.
+    -s, --series     Series mode. Does not work with -m.
+    -h, --help       Show this help.
+EOF
+}
+
+function cleanUp() {
+    trap "rm $LOGFILE" EXIT TERM
+}
+
+#--------------------------------------#
+# Parameters: action, db, mode, files
+#--------------------------------------#
+function moveIt() {
+    local action="$1"; shift
+    local db="$1"; shift
+    local mode="$1"; shift
+
+    if [ "$action" == "test" ]; then
+        echo "####################"
+        echo "#      [TEST]      #"
+        echo "####################"
+    fi
+
+    for file in "$@"; do
+        echo "##################################################"
+        echo "# New file"
+        echo "##################################################"
+
+        filebot -rename \
+            -non-strict \
+            --action "$action" \
+            --db "$db" \
+            --format "$DESTINATION$mode/${EXPRESSIONS[$mode]}" "$file" | sponge "$LOGFILE"
+
+        sed -e 's:\['"${action^^}"'\] Rename \[/mnt/grab/down:\n:' \
+            -e 's:\] to \[:\n:' \
+            -e 's:'"${DESTINATION}${mode}"'/::' \
+            -e '/Fetching/d' \
+            -e '/Rename/d' "$LOGFILE"
+    done
+}
+
+#TODO: Proper html generation
+function generateHTML() {
+    tree "$DESTINATION$mode" -L 2 -d -C --nolinks -T "" -H mhm -o "$LOGFILE"
+
+    sed -i "/BODY/ a\
+        html { display: table; margin: auto}\n \
+        body { display: table-cell; vertical-align: middle}" "$LOGFILE"
+
+    chmod 644 "$LOGFILE"
+
+    rsync --human-readable -a --info=progress2 --partial "$LOGFILE" uberspace:html/la
+}
+
+main "$@"
