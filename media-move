@@ -58,7 +58,7 @@ function main() {
         moveIt "test" "$db" "$mode" "${FILES[@]}"
     fi
 
-    generateHTML "$mode"
+    generateHTML
 }
 
 function usage() {
