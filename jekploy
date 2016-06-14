@@ -4,7 +4,7 @@ dir="/home/$(whoami)/blog"
 push=""
 
 if [ "$PWD" != "$dir" ]; then
-    cd $dir
+    cd "$dir"
 fi
 
 ###
@@ -34,24 +34,26 @@ else
     got_drafts=false
 fi
 
-if $got_drafts; then
+if "$got_drafts"; then
     echo "Found drafts"
 
     for x in _drafts/*
     do
-        echo -n "Want to publish $(basename $x)? [y/n]: "
+        echo -n "Want to publish "$(basename $x)"? [y/n]: "
         read choice
-        if [ $choice == "y" ]; then
+        if [ "$choice" == "y" ]; then
             echo "--------------------"
             echo "Publishing posts"
             echo "--------------------"
             mv "$x" _posts
+            git add -A .
+            git commit -m "Publishing $x"
         fi
     done
 fi
 
 # Push, after we published the post
-if [ $push == "y" ]; then
+if [ "$choice" == "y" ]; then
     echo "--------------------"
     echo "Pushing to repo"
     echo "--------------------"
