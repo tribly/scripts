@@ -2,38 +2,67 @@
 
 main() {
     # The drive to backup to
-    BKP_MNT=/mnt/backup
+    BKP_MNT="$1"
+    # The externel drive to copy the backup to
+    EXT_BKP_MNT="$3"
     # The directory to store backups in
-    REPO=/mnt/backup/home_backups
+    REPO="${BKP_MNT}/home_backups"
     # Name of the archive, duh
-    ARCHIVE_NAME=$(date +%d-%m-%Y_%H:%M:%S)
+    ARCHIVE_NAME="$(date +%d-%m-%Y_%H:%M:%S)"
     # UUID of the drive to mount
-    UUID="57887ad0-59e4-493a-9f4d-d7d89e1c7743"
+    UUID="$2"
+    # UUID of the external drive to mount
+    EXT_UUID="$4"
     LOG_FILE=$(mktemp)
 
     trap cleanUp EXIT TERM
 
-    checkForDrive $UUID
-
 	notify-send "starting backup"
-    backup $REPO $ARCHIVE_NAME 2>&1 | \
-        gpg --yes -e --no-tty --batch -r 0xA03A50C0C71BE6BE --quiet -a -o $LOG_FILE
 
-    /home/heinz/scripts/maillog "daemon@keks" \
-                                "home-backup log" \
-                                "daemon@tribly.de" \
-                                "" \
-                                "$LOG_FILE"
+    checkForDrive "$UUID" "$BKP_MNT"
+
+    # If running manually show progress and send mail
+    if tty -s; then
+        backup "$REPO" "$ARCHIVE_NAME" 2>&1 | \
+            tee /dev/tty | \
+            gpg --yes -e --no-tty --batch -r 0xA03A50C0C71BE6BE --quiet -a -o "$LOG_FILE"
+
+        /home/heinz/scripts/maillog "daemon@keks" \
+                                    "home-backup log" \
+                                    "daemon@tribly.de" \
+                                    "" \
+                                    "$LOG_FILE"
+    else
+        backup "$REPO" "$ARCHIVE_NAME" 2>&1 | \
+            gpg --yes -e --no-tty --batch -r 0xA03A50C0C71BE6BE --quiet -a -o "$LOG_FILE"
+
+        /home/heinz/scripts/maillog "daemon@keks" \
+                                    "home-backup log" \
+                                    "daemon@tribly.de" \
+                                    "" \
+                                    "$LOG_FILE"
+    fi
+
+    copyBackup
 
     notify-send "backup complete"
 }
 
+copyBackup() {
+    checkForDrive "$EXT_UUID" "$EXT_BKP_MNT"
+
+    rsync -PHAXpaxq "$REPO" "$EXT_BKP_MNT"
+}
+
 cleanUp() {
-    rm -rf $LOG_FILE
+    rm -rf "$LOG_FILE"
 
     # Check if drive is mounted and unmount it
-    if lsblk | ag $BKP_MNT > /dev/null; then
-        umount $BKP_MNT
+    if lsblk | ag "$BKP_MNT" > /dev/null; then
+        umount "$BKP_MNT"
+    fi
+    if lsblk | ag "$EXT_BKP_MNT" > /dev/null; then
+        umount "$EXT_BKP_MNT"
     fi
 }
 
@@ -44,44 +73,38 @@ checkForDrive() {
     for x in $(lsblk --output UUID); do
         if [ "$x" == "$1" ]; then
             connected=true
-        else
-            :
+            break
         fi
     done
 
-    # If it is connected mount it
-    if [ "$connected" == "false" ]; then
-        notify-send "Turn on backup"
+    # If it is connected mount it, else notify and wait
+    if [ ! "$connected" ]; then
+        notify-send "Turn on $2"
     else
-        if lsblk | ag $BKP_MNT > /dev/null; then
+        # Check if it's already mounted
+        if lsblk | ag "$2" > /dev/null; then
             # Do nothing, it's mounted
             :
         else
-            mount $BKP_MNT
+            mount "$2"
         fi
 
         return
     fi
 
-
-    # Else, check every 5 min if the drive is turned on
+    # Check every 5 min if the drive is turned on
     for i in $(seq 1 11); do
         for x in $(lsblk --output UUID); do
-            if [ "$x" != "$1" ]; then
-                :
-            else
-                connected=true
-                break 2
+            if [ "$x" == "$1" ]; then
+                mount "$2"
+                return
             fi
         done
         sleep 5m
     done
 
-    if [ "$connected" == "false" ]; then
-        exit
-    else
-        return
-    fi
+    # Still not connected, exit the script
+    exit
 }
 
 backup() {
@@ -93,13 +116,15 @@ backup() {
 
     local -a excludeDirs=(
             --exclude /home/$(whoami)/torrents
-            --exclude /home/$(whoami)/.local
-            --exclude /home/$(whoami)/.cache
-            --exclude /home/$(whoami)/aur
-            --exclude /home/$(whoami)/games
+            #--exclude /home/$(whoami)/.local
+            #--exclude /home/$(whoami)/.cache
+            #--exclude /home/$(whoami)/aur
+            #--exclude /home/$(whoami)/games
             --exclude /home/$(whoami)/downloads
             --exclude /home/$(whoami)/matlab
             --exclude /home/$(whoami)/.incomplete_torrents
+            --exclude /home/lost+found
+            --exclude /home/samber
             --exclude /home/lost+found
     )
 
@@ -108,18 +133,22 @@ backup() {
             --stats
     )
 
+    if tty -s; then
+        options+=(--progress)
+    fi
+
     borg create \
         "${options[@]}" \
-        $REPO::$ARCHIVE_NAME \
+        "$REPO"::"$ARCHIVE_NAME" \
         /home \
         "${excludeDirs[@]}"
 
     # Keep Backups up to 6 months old
     borg prune \
         --keep-within=6m \
-        $REPO
+        "$REPO"
 
     unset BORG_PASSPHRASE
 }
 
-main
+main "$@"
