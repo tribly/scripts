@@ -1,0 +1,32 @@
+#!/bin/bash
+
+lock_img="$HOME/.wallpapers/Lock-icon.png"
+name="/tmp/screenlock.$RANDOM.png"
+
+maim "$name"
+
+trap "rm $name" EXIT TERM
+
+convert "$name" -scale 10% -scale 1000% "$name"
+
+px=0
+py=0
+
+lif=$(file "$lock_img" | grep -o '[0-9]* x [0-9]*')
+lif_x=$(echo $lif | cut -d ' ' -f1)
+lif_y=$(echo $lif | cut -d ' ' -f3)
+
+screens_dimens=$(xrandr --query | grep ' connected' | cut -d ' ' -f3)
+
+for screens in $screens_dimens; do
+    screens_x=$(echo $screens | cut -d 'x' -f1)
+    screens_y=$(echo $screens | cut -d 'x' -f2 | cut -d '+' -f1)
+    screens_off_x=$(echo $screens | cut -d 'x' -f2 | cut -d '+' -f2)
+    screens_off_y=$(echo $screens | cut -d 'x' -f2 | cut -d '+' -f3)
+    middle_x=$(($screens_off_x + $screens_x/2 - $lif_x/2))
+    middle_y=$(($screens_off_y + $screens_y/2 - $lif_y/2))
+
+    convert "$name" "$lock_img" -geometry +"$middle_x"+"$middle_y" -composite -matte "$name"
+done
+
+i3lock -e -u -i "$name"
