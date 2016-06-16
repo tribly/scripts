@@ -1,6 +1,8 @@
 #!/bin/bash
 
 main() {
+    # Key to send encrypted mail
+    GPGKEY="0xA03A50C0C71BE6BE"
     # The drive to backup to
     BKP_MNT="$1"
     # The externel drive to copy the backup to
@@ -23,19 +25,18 @@ main() {
 
     # If running manually show progress and send mail
     if tty -s; then
-        # TODO
-        #   Output to $LOG_FILE cut the first line and encrypt the log
         backup "$REPO" "$ARCHIVE_NAME" 2>&1 | \
-            tee /dev/tty | sponge "$LOG_FILE"
-
+            tee /dev/tty | \
+            sponge "$LOG_FILE"
         # Delete the first line, since it's only garbage
         sed -i "1d" "$LOG_FILE"
     else
-        backup "$REPO" "$ARCHIVE_NAME" > "$LOG_FILE" 2>&1
+        backup "$REPO" "$ARCHIVE_NAME" 2>&1 | \
+            sponge "$LOG_FILE"
     fi
 
     sendLog
-    #copyBackup
+    copyBackup
 
     notify-send "backup complete"
 }
@@ -43,7 +44,7 @@ main() {
 sendLog() {
     # Encrypt the Log-file so we can send it via E-Mail
     gpg --yes --quiet --no-tty -e -a --batch \
-        -r 0xA03A50C0C71BE6BE \
+        -r "$GPGKEY" \
         "$LOG_FILE"
 
     "$HOME"/scripts/maillog "daemon@keks" \
