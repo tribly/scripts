@@ -13,7 +13,7 @@ main() {
     UUID="$2"
     # UUID of the external drive to mount
     EXT_UUID="$4"
-    LOG_FILE=$(mktemp)
+    LOG_FILE="$(mktemp)"
 
     trap cleanUp EXIT TERM
 
@@ -23,25 +23,21 @@ main() {
 
     # If running manually show progress and send mail
     if tty -s; then
+        # TODO
+        #   Output to $LOGFILE cut the first line and encrypt the log
         backup "$REPO" "$ARCHIVE_NAME" 2>&1 | \
             tee /dev/tty | \
             gpg --yes -e --no-tty --batch -r 0xA03A50C0C71BE6BE --quiet -a -o "$LOG_FILE"
-
-        /home/$(whoami)/scripts/maillog "daemon@keks" \
-                                    "home-backup log" \
-                                    "daemon@tribly.de" \
-                                    "" \
-                                    "$LOG_FILE"
     else
         backup "$REPO" "$ARCHIVE_NAME" 2>&1 | \
             gpg --yes -e --no-tty --batch -r 0xA03A50C0C71BE6BE --quiet -a -o "$LOG_FILE"
-
-        /home/$(whoami)/scripts/maillog "daemon@keks" \
-                                    "home-backup log" \
-                                    "daemon@tribly.de" \
-                                    "" \
-                                    "$LOG_FILE"
     fi
+
+    "$HOME"/scripts/maillog "daemon@keks" \
+                            "home-backup log" \
+                            "daemon@tribly.de" \
+                            "" \
+                            "$LOG_FILE"
 
     copyBackup
 
@@ -108,21 +104,18 @@ checkForDrive() {
 }
 
 backup() {
+    local BORG_PASSPHRASE
     local REPO=$1
     local ARCHIVE_NAME=$2
-	local BORG_PASSPHRASE=$(pass storage/keks-backup)
+	BORG_PASSPHRASE="$(pass storage/keks-backup)"
 
 	export BORG_PASSPHRASE
 
     local -a excludeDirs=(
-            --exclude /home/$(whoami)/torrents
-            #--exclude /home/$(whoami)/.local
-            #--exclude /home/$(whoami)/.cache
-            #--exclude /home/$(whoami)/aur
-            #--exclude /home/$(whoami)/games
-            --exclude /home/$(whoami)/downloads
-            --exclude /home/$(whoami)/matlab
-            --exclude /home/$(whoami)/.incomplete_torrents
+            --exclude "$HOME"/torrents
+            --exclude "$HOME"/downloads
+            --exclude "$HOME"/matlab
+            --exclude "$HOME"/.incomplete_torrents
             --exclude /home/lost+found
             --exclude /home/samber
             --exclude /home/lost+found
