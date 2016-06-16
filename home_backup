@@ -51,7 +51,6 @@ sendLog() {
                             "daemon@tribly.de" \
                             "" \
                             "$LOG_FILE"
-
 }
 
 copyBackup() {
@@ -117,7 +116,6 @@ backup() {
     local REPO=$1
     local ARCHIVE_NAME=$2
 	BORG_PASSPHRASE="$(pass storage/keks-backup)"
-
 	export BORG_PASSPHRASE
 
     local -a excludeDirs=(
