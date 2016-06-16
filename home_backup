@@ -27,7 +27,7 @@ main() {
             tee /dev/tty | \
             gpg --yes -e --no-tty --batch -r 0xA03A50C0C71BE6BE --quiet -a -o "$LOG_FILE"
 
-        /home/heinz/scripts/maillog "daemon@keks" \
+        /home/$(whoami)/scripts/maillog "daemon@keks" \
                                     "home-backup log" \
                                     "daemon@tribly.de" \
                                     "" \
@@ -36,7 +36,7 @@ main() {
         backup "$REPO" "$ARCHIVE_NAME" 2>&1 | \
             gpg --yes -e --no-tty --batch -r 0xA03A50C0C71BE6BE --quiet -a -o "$LOG_FILE"
 
-        /home/heinz/scripts/maillog "daemon@keks" \
+        /home/$(whoami)/scripts/maillog "daemon@keks" \
                                     "home-backup log" \
                                     "daemon@tribly.de" \
                                     "" \
@@ -78,7 +78,7 @@ checkForDrive() {
     done
 
     # If it is connected mount it, else notify and wait
-    if [ ! "$connected" ]; then
+    if ! "$connected" ; then
         notify-send "Turn on $2"
     else
         # Check if it's already mounted
