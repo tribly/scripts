@@ -8,7 +8,7 @@ declare -a FILES
 declare -A EXPRESSIONS=(["series"]="{n.space('_').lower()}/season_{s}/{fn.space('_')}" \
                         ["movies"]="{n.space('_').lower()}/{fn.space('_')}")
 
-function main() {
+main() {
     cleanUp
 
     for param in "$@"; do
@@ -61,7 +61,7 @@ function main() {
     generateHTML
 }
 
-function usage() {
+usage() {
     cat << EOF
 usage: $(basename "$0") [param] <files>
 
@@ -73,14 +73,14 @@ Options:
 EOF
 }
 
-function cleanUp() {
+cleanUp() {
     trap "rm $LOGFILE" EXIT TERM
 }
 
 #--------------------------------------#
 # Parameters: action, db, mode, files
 #--------------------------------------#
-function moveIt() {
+moveIt() {
     local action="$1"; shift
     local db="$1"; shift
     local mode="$1"; shift
@@ -111,7 +111,7 @@ function moveIt() {
 }
 
 #TODO: Proper html generation
-function generateHTML() {
+generateHTML() {
     tree "$DESTINATION$mode" -L 2 -d -C --nolinks -T "" -H mhm -o "$LOGFILE"
 
     sed -i "/BODY/ a\
