@@ -57,6 +57,12 @@ sendLog() {
 copyBackup() {
     checkForDrive "$EXT_UUID" "$EXT_BKP_MNT"
     rsync -PHAXpaxq "$REPO" "$EXT_BKP_MNT"
+
+    if [ $? -ne 0 ]; then
+        echo "Not synced the backup"
+    else
+        echo "Synced backup successfully"
+    fi
 }
 
 cleanUp() {
