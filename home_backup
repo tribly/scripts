@@ -18,6 +18,7 @@ main() {
     LOG_FILE="$(mktemp)"
 
     trap cleanUp EXIT TERM
+    trap abort SIGINT
 
 	notify-send "starting backup"
 
@@ -35,10 +36,17 @@ main() {
             sponge "$LOG_FILE"
     fi
 
-    sendLog
     copyBackup
+    sendLog
 
     notify-send "backup complete"
+}
+
+abort() {
+    echo
+    echo "Aborting..."
+    echo "Cleaning up..."
+    cleanUp
 }
 
 sendLog() {
@@ -59,9 +67,9 @@ copyBackup() {
     rsync -PHAXpaxq "$REPO" "$EXT_BKP_MNT"
 
     if [ $? -ne 0 ]; then
-        echo "Not synced the backup"
+        echo "Not synced the backup" >> "$LOG_FILE"
     else
-        echo "Synced backup successfully"
+        echo "Synced backup successfully" >> "$LOG_FILE"
     fi
 }
 
