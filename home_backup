@@ -20,7 +20,7 @@ main() {
     trap cleanUp EXIT TERM
     trap abort SIGINT
 
-	notify-send "starting backup"
+    notify-send "starting backup"
 
     checkForDrive "$UUID" "$BKP_MNT"
 
@@ -37,9 +37,14 @@ main() {
     fi
 
     copyBackup
-    sendLog
 
-    notify-send "backup complete"
+    if [ $? -ne 1 ]; then
+        notify-send "Backup complete with sync"
+    else
+        notify-send "Backup complete without sync"
+    fi
+
+    sendLog
 }
 
 abort() {
@@ -67,8 +72,10 @@ copyBackup() {
     rsync -PHAXpaxq "$REPO" "$EXT_BKP_MNT"
 
     if [ $? -ne 0 ]; then
-        echo "Not synced the backup" >> "$LOG_FILE"
+        return 1
+        echo "Not synced backup" >> "$LOG_FILE"
     else
+        return 0
         echo "Synced backup successfully" >> "$LOG_FILE"
     fi
 }
@@ -131,7 +138,7 @@ backup() {
     local BORG_PASSPHRASE
     local REPO=$1
     local ARCHIVE_NAME=$2
-	BORG_PASSPHRASE="$(pass storage/keks-backup)"
+    BORG_PASSPHRASE="$(pass storage/keks-backup)"
 	export BORG_PASSPHRASE
 
     local -a excludeDirs=(
