@@ -1,0 +1,25 @@
+#!/bin/bash
+
+BORG_PASSPHRASE="$(pass storage/keks-backup)"
+export BORG_PASSPHRASE
+
+killall -9 steam
+
+mount /mnt/backup_intern
+
+mkdir "$HOME/ex"
+cd "$HOME/ex" || echo "Can't cd into ex"; exit
+
+borg extract /mnt/backup_intern/home_backups::16-06-2016_18:29:42 home/heinz/.local/share/Steam/SteamApps/appmanifest_570.acf
+borg extract /mnt/backup_intern/home_backups::16-06-2016_18:29:42 home/heinz/.local/share/Steam/SteamApps/common/dota\ 2\ beta
+
+rm -r "$HOME/.local/share/Steam/SteamApps/common/dota\ 2\ beta"
+
+mv home/heinz/.local/share/Steam/SteamApps/common/dota\ 2\ beta "$HOME/.local/share/Steam/SteamApps/common"
+mv home/heinz/.local/share/Steam/SteamApps/appmanifest_570.acf "$HOME/.local/share/Steam/SteamApps"
+
+umount /mnt/backup_intern
+
+unset BORG_PASSPHRASE
+
+notify-send "Done, fucker"
