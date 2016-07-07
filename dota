@@ -1,24 +1,32 @@
 #!/bin/bash
 
+trap 'rm -rf $HOME/ex; umount /mnt/backup_intern' EXIT TERM
+
 BORG_PASSPHRASE="$(pass storage/keks-backup)"
 export BORG_PASSPHRASE
 
-killall -9 steam
+if pgrep steam > /dev/null; then
+    echo "Killing Steam..."
+    killall -9 steam
+fi
 
-mount /mnt/backup_intern
+if ! mount | grep /mnt/backup_intern > /dev/null; then
+    echo "Mounting backup..."
+    mount /mnt/backup_intern
+fi
 
 mkdir "$HOME/ex"
-cd "$HOME/ex" || echo "Can't cd into ex"; exit
+cd "$HOME/ex" || echo "Can't cd into dir"
 
+echo "Starting extract..."
 borg extract /mnt/backup_intern/home_backups::16-06-2016_18:29:42 home/heinz/.local/share/Steam/SteamApps/appmanifest_570.acf
 borg extract /mnt/backup_intern/home_backups::16-06-2016_18:29:42 home/heinz/.local/share/Steam/SteamApps/common/dota\ 2\ beta
 
-rm -r "$HOME/.local/share/Steam/SteamApps/common/dota\ 2\ beta"
+rm -r "$HOME/.local/share/Steam/SteamApps/common/dota 2 beta"
 
+echo "Moving files..."
 mv home/heinz/.local/share/Steam/SteamApps/common/dota\ 2\ beta "$HOME/.local/share/Steam/SteamApps/common"
 mv home/heinz/.local/share/Steam/SteamApps/appmanifest_570.acf "$HOME/.local/share/Steam/SteamApps"
-
-umount /mnt/backup_intern
 
 unset BORG_PASSPHRASE
 
