@@ -38,7 +38,7 @@ main() {
 
     copyBackup
 
-    if [ $? -ne 1 ]; then
+    if [ $? -eq 0 ]; then
         notify-send "Backup complete with sync"
     else
         notify-send "Backup complete without sync"
@@ -73,17 +73,29 @@ sendLog() {
 }
 
 copyBackup() {
+    local sync_stat
     checkForDrive "$EXT_UUID" "$EXT_BKP_MNT"
-    rsync -PHAXpaxq "$REPO" "$EXT_BKP_MNT"
 
-    if [ $? -ne 0 ]; then
-        echo "Syncing backup: [FAIL]" >> "$LOG_FILE"
-        echo "-----------------------------------------------------------------------------" >> "$LOG_FILE"
-        return 1
+    if [ $? -eq 0 ]; then
+        rsync -PHAXpaxq "$REPO" "$EXT_BKP_MNT"
+
+        if [ $? -eq 0 ]; then
+            sync_stat=0
+        else
+            sync_stat=1
+        fi
     else
+        sync_stat=1
+    fi
+
+    if [ $sync_stat -eq 0 ]; then
         echo "Syncing backup: [OK]" >> "$LOG_FILE"
         echo "-----------------------------------------------------------------------------" >> "$LOG_FILE"
         return 0
+    else
+        echo "Syncing backup: [FAIL]" >> "$LOG_FILE"
+        echo "-----------------------------------------------------------------------------" >> "$LOG_FILE"
+        return 1
     fi
 }
 
@@ -123,7 +135,7 @@ checkForDrive() {
             mount "$2"
         fi
 
-        return
+        return 0
     fi
 
     # Check every 5 min if the drive is turned on
@@ -131,14 +143,14 @@ checkForDrive() {
         for x in $(lsblk --output UUID); do
             if [ "$x" == "$1" ]; then
                 mount "$2"
-                return
+                return 0
             fi
         done
         sleep 5m
     done
 
-    # Still not connected, exit the script
-    exit
+    # Still not connected
+    return 1
 }
 
 backup() {
