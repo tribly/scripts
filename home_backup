@@ -44,7 +44,12 @@ main() {
         notify-send "Backup complete without sync"
     fi
 
+    diskspaceLeft
     sendLog
+}
+
+diskspaceLeft() {
+    df -h "$BKP_MNT" "$EXT_BKP_MNT" >> "$LOG_FILE"
 }
 
 abort() {
