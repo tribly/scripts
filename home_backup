@@ -77,10 +77,12 @@ copyBackup() {
     rsync -PHAXpaxq "$REPO" "$EXT_BKP_MNT"
 
     if [ $? -ne 0 ]; then
-        echo "Not synced backup" >> "$LOG_FILE"
+        echo "Syncing backup: [FAIL]" >> "$LOG_FILE"
+        echo "-----------------------------------------------------------------------------" >> "$LOG_FILE"
         return 1
     else
-        echo "Synced backup successfully" >> "$LOG_FILE"
+        echo "Syncing backup: [OK]" >> "$LOG_FILE"
+        echo "-----------------------------------------------------------------------------" >> "$LOG_FILE"
         return 0
     fi
 }
