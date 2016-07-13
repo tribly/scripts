@@ -112,7 +112,7 @@ moveIt() {
 
 #TODO: Proper html generation
 generateHTML() {
-    tree "$DESTINATION$mode" -L 2 -d -C --nolinks -T "" -H mhm -o "$LOGFILE"
+    tree "$DESTINATION$mode" -L 1 -d -C --nolinks -T "" -H mhm -o "$LOGFILE"
 
     sed -i "/BODY/ a\
         html { display: table; margin: auto}\n \
