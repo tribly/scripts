@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Directory with the series
+s_dir=/mnt/grab/series/family_guy
+
+mpv --shuffle "$s_dir" --really-quiet &
+
+sleep 2m
+xset dpms force off
+sleep 50m
+# Better kill chrome, because of suspend/reboot problem
+#killall chromium
+systemctl poweroff
