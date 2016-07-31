@@ -47,8 +47,11 @@ fi
 tmpfile="$(mktemp --suffix=.mkv)"
 endname="/home/$(whoami)/clips/$outputname"
 
-ffmpeg -i "$filename" -ss "$starttime" -to "$endtime" -sn -c copy "$tmpfile"
+ffmpeg -y -i "$filename" -ss "$starttime" -to "$endtime" -sn -c copy "$tmpfile"
 
-ffmpeg -i "$tmpfile" -vf scale=-1:720 -c:v libvpx -crf 4 -b:v 2M -c:a libvorbis "$endname"
+# regular
+#ffmpeg -i "$tmpfile" -vf scale=-1:720 -c:v libvpx -crf 4 -b:v 2M -c:a libvorbis "$endname"
+# cartoons
+ffmpeg -i "$tmpfile" -vf scale=-1:720 -c:v libvpx -crf 32 -b:v 1M -c:a libvorbis "$endname"
 
 trap 'rm $tmpfile' EXIT TERM
