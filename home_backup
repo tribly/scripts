@@ -167,7 +167,6 @@ backup() {
             --exclude "$HOME"/.incomplete_torrents
             --exclude /home/lost+found
             --exclude /home/samber
-            --exclude /home/lost+found
     )
 
     local -a options=(
