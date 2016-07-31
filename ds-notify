@@ -1,0 +1,33 @@
+#!/bin/bash
+
+thres=90
+log="$(mktemp)"
+
+declare -a disks=(
+    /
+    /var
+    /home
+    /mnt/grab
+    /mnt/data
+)
+
+for disk in "${disks[@]}"; do
+    space_used=$(df -h --output=pcent "$disk" | tail -n1 | sed 's/ //g' | sed 's/%//')
+
+    if [ "$space_used" -gt "$thres" ]; then
+        echo -e "$disk almost full:\t$space_used% used" >> "$log"
+    fi
+
+done
+
+gpg --yes --quiet --no-tty -e -a --batch \
+    -r 0xA03A50C0C71BE6BE \
+    "$log"
+
+"$HOME"/scripts/maillog "daemon@keks" \
+                        "Diskspace" \
+                        "daemon@tribly.de" \
+                        "" \
+                        "$log.asc"
+
+trap 'rm $log $log.asc' EXIT TERM
