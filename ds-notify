@@ -1,7 +1,8 @@
 #!/bin/bash
 
-thres=90
+thresh=90
 log="$(mktemp)"
+first_disk=true
 
 declare -a disks=(
     /
@@ -14,10 +15,14 @@ declare -a disks=(
 for disk in "${disks[@]}"; do
     space_used=$(df -h --output=pcent "$disk" | tail -n1 | sed 's/ //g' | sed 's/%//')
 
-    if [ "$space_used" -gt "$thres" ]; then
-        echo -e "$disk almost full:\t$space_used% used" >> "$log"
-    fi
+    if [ "$space_used" -gt "$thresh" ]; then
+        mnt_point="$(grep " $disk " /proc/mounts | cut -d ' ' -f1)"
 
+        "$first_disk" && echo "FILESYSTEM       (=) USED      FREE (-) %USED AVAILABLE     TOTAL MOUNTED ON" >> "$log"
+
+        dfc -p "$mnt_point" | tail -n1 >> "$log"
+        first_disk=false
+    fi
 done
 
 gpg --yes --quiet --no-tty -e -a --batch \
