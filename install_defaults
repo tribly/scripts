@@ -23,8 +23,8 @@ check_install "openssh"
 check_install "gvim"
 check_install "zsh"
 check_install "git"
-check_install "powerline-vim"
 check_install "mosh"
+check_install "gvim"
 check_install "the_silver_searcher"
 
 # Server stuff
